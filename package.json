@@ -1,0 +1,17 @@
+{
+  "name": "salang",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "build": "pegjs src/language/salang.pegjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "pegjs": "^0.10.0",
+    "vitest": "^1.0.4"
+  }
+}
