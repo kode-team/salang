@@ -26,7 +26,7 @@ Basic usage of the SaLang language.
 
 #### Components
 
-```salang
+```css
 @component MyComponent {
   // Contents of the component
 }
@@ -34,34 +34,32 @@ Basic usage of the SaLang language.
 
 #### State Management
 
-```salang
+```css
 @state {
   counter: 0;
-  isVisible: true;
+  isvisible: true;
 }
-
 ```
 
 #### Defining Attributes
 
-```salang
+```css
 @attribute title: "Interactive Component";
 ```
 
 #### Styling Components
 
-```salang
+```css
 @style {
   .my-class {
     color: var(primaryColor);
   }
 }
-
 ```
 
 #### Event Handling
 
-```salang
+```css
 @event click on .my-button {
   @js {
     // Event handling logic
@@ -71,7 +69,7 @@ Basic usage of the SaLang language.
 
 #### Templating
 
-```salang
+```css
 @template {
   div.my-component {
     "Hello, world!"
@@ -81,7 +79,7 @@ Basic usage of the SaLang language.
 
 #### Full Example
 
-```salang
+```css
 @component ComplexComponent {
     @state {
       items: [];
