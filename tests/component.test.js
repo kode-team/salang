@@ -4,6 +4,7 @@ import salangParser from "../src/language/salang";
 
 describe("SaLang Parser - Component Parsing", () => {
   it("should parse a basic component with no attributes or content", () => {
+
     const input = `
       @component emptyComponent {
 

@@ -65,8 +65,19 @@ describe('MyComponent AST Tests', () => {
       {
         type: 'StateGroup',
         states: [
-          { type: 'State', id: 'counter', value: 0 },
-          { type: 'State', id: 'isVisible', value: true }
+          {
+            type: 'State', id: 'counter', value: {
+              "raw": "0",
+              "type": "NumberLiteral",
+              "value": 0,
+            }
+          },
+          {
+            type: 'State', id: 'isVisible', value: {
+              type: "BooleanLiteral",
+              value: true,
+            }
+          }
         ]
       },
       {

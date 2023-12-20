@@ -15,7 +15,9 @@ describe('SaLang @state Parsing Tests', () => {
       body: [{
         type: 'State',
         id: 'counter',
-        value: 0
+        value: {
+          type: "NumberLiteral", value: 0, raw: "0"
+        }
       }]
     }]);
   });
@@ -36,8 +38,16 @@ describe('SaLang @state Parsing Tests', () => {
       body: [{
         type: 'StateGroup',
         states: [
-          { type: "State", id: 'counter', value: 0 },
-          { type: "State", id: 'isLoading', value: false }
+          {
+            type: "State", id: 'counter', value: {
+              type: "NumberLiteral", value: 0, raw: "0"
+            }
+          },
+          {
+            type: "State", id: 'isLoading', value: {
+              type: "BooleanLiteral", value: false
+            }
+          }
         ]
       }]
     }]);
@@ -72,7 +82,11 @@ describe('SaLang @state Parsing Tests', () => {
               type: "StateGroup",
               states: [
                 { type: "State", id: 'name', value: { type: "StringLiteral", value: "John" } },
-                { type: "State", id: 'age', value: 30 }
+                {
+                  type: "State", id: 'age', value: {
+                    type: "NumberLiteral", value: 30, raw: "30"
+                  }
+                }
               ]
             }
           },
@@ -83,7 +97,11 @@ describe('SaLang @state Parsing Tests', () => {
               type: "StateGroup",
               states: [
                 { type: "State", id: 'theme', value: { type: "StringLiteral", value: "dark" } },
-                { type: "State", id: 'notifications', value: true }
+                {
+                  type: "State", id: 'notifications', value: {
+                    type: "BooleanLiteral", value: true
+                  }
+                }
               ]
             }
           }
@@ -107,11 +125,19 @@ describe('SaLang @state Parsing Tests', () => {
       type: 'Component',
       id: 'MixedComponent',
       body: [
-        { type: 'State', id: 'singleState', value: true },
+        {
+          type: 'State', id: 'singleState', value: {
+            type: "BooleanLiteral", value: true
+          }
+        },
         {
           type: 'StateGroup',
           states: [
-            { type: "State", id: 'groupState1', value: 1 },
+            {
+              type: "State", id: 'groupState1', value: {
+                type: "NumberLiteral", value: 1, raw: "1"
+              }
+            },
             { type: "State", id: 'groupState2', value: { type: "StringLiteral", value: "test" } }
           ]
         }
@@ -153,13 +179,21 @@ describe('SaLang @state Parsing Tests', () => {
       body: [{
         type: 'StateGroup',
         states: [
-          { type: "State", id: 'numberState', value: 100 },
+          {
+            type: "State", id: 'numberState', value: {
+              type: "NumberLiteral", value: 100, raw: "100"
+            }
+          },
           {
             type: "State", id: 'stringState', value: {
               type: "StringLiteral", value: "Hello"
             }
           },
-          { type: "State", id: 'booleanState', value: true }
+          {
+            type: "State", id: 'booleanState', value: {
+              type: "BooleanLiteral", value: true
+            }
+          }
         ]
       }]
     }]);

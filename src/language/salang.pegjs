@@ -349,7 +349,6 @@ ArrayLiteral "array literal"
 
 ArrayElements
   = first:attributeValue _ rest:(_ "," _ attributeValue _)* {
-    console.log(first, rest)
       return [first, ...rest.map(r => r[3])];
     }
 
@@ -389,12 +388,20 @@ TripleDoubleQuotedChar
 
 // Number literal
 NumberLiteral "NumberLiteral"
-  = digits:[0-9]+ { return parseInt(digits.join('')); }
+  = digits:[0-9]+ decimalPart:("." [0-9]+)? exponentPart:("e" [+-]? [0-9]+)? { 
+      var numberString = digits.join('') + (decimalPart ? decimalPart.flat(Infinity).join('') : '') + (exponentPart ? exponentPart.flat(Infinity).join('') : '');
+      return { type: "NumberLiteral", value: parseFloat(numberString), raw: numberString }; 
+    }
+
 
 // Boolean literal
 BooleanLiteral "BooleanLiteral"
-  = "true" { return true; }
-  / "false" { return false; }
+  = "true" { 
+      return { type: "BooleanLiteral", value: true } 
+    }
+  / "false" { 
+      return { type: "BooleanLiteral", value: false }; 
+    }
 
 // CSS selector
 selector "CSS selector"
