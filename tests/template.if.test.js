@@ -8,9 +8,9 @@ describe("SaLang Parser - Advanced Template Parsing", () => {
       @component myComponent {
         @template {
           @if var(isVisible) {
-            div { Visible Content }
+            div { "Visible Content" }
           } @else {
-            div { Hidden Content }
+            div { "Hidden Content" }
           }
         }
       }
@@ -33,7 +33,7 @@ describe("SaLang Parser - Advanced Template Parsing", () => {
                                     ],
                                     content: [
                                         {
-                                            type: "Element", tag: "div", content: [
+                                            type: "Element", tag: "div", attributes: [], content: [
                                                 { type: "TextNode", value: "Visible Content" }
                                             ]
                                         }
@@ -43,7 +43,7 @@ describe("SaLang Parser - Advanced Template Parsing", () => {
                                     type: "ElseConditional",
                                     content: [
                                         {
-                                            type: "Element", tag: "div", content: [
+                                            type: "Element", tag: "div", attributes: [], content: [
                                                 { type: "TextNode", value: "Hidden Content" }
                                             ]
                                         }

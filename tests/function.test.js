@@ -39,5 +39,78 @@ describe("SaLang Parser - Function Parsing with var() in Selector", () => {
         ]);
     });
 
-    // 추가적인 복잡한 함수 시나리오를 위한 테스트 케이스를 계속해서 작성할 수 있습니다.
+    it("should parse a function without parameters", () => {
+        const input = `
+      @component myComponent {
+        @function myFunctionWithoutParams() {
+          @selector .simple-button {
+            background-color: blue;
+            color: white;
+          }
+        }
+      }
+    `;
+        const result = salangParser.parse(input.trim());
+        expect(result).toEqual([
+            {
+                type: "Component",
+                id: "myComponent",
+                body: [
+                    {
+                        type: "Function",
+                        functionName: "myFunctionWithoutParams",
+                        args: [],
+                        body: [
+                            {
+                                type: "CSSRule",
+                                selector: ".simple-button",
+                                properties: [
+                                    { type: "CSSProperty", property: "background-color", value: "blue" },
+                                    { type: "CSSProperty", property: "color", value: "white" }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]);
+    });
+
+
+    it("should parse a function without parameters", () => {
+        const input = `
+      @component myComponent {
+        @function myFunctionWithoutParams {
+          @selector .simple-button {
+            background-color: blue;
+            color: white;
+          }
+        }
+      }
+    `;
+        const result = salangParser.parse(input.trim());
+        expect(result).toEqual([
+            {
+                type: "Component",
+                id: "myComponent",
+                body: [
+                    {
+                        type: "Function",
+                        functionName: "myFunctionWithoutParams",
+                        args: [],
+                        body: [
+                            {
+                                type: "CSSRule",
+                                selector: ".simple-button",
+                                properties: [
+                                    { type: "CSSProperty", property: "background-color", value: "blue" },
+                                    { type: "CSSProperty", property: "color", value: "white" }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]);
+    });
 });

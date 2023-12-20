@@ -8,14 +8,49 @@
   }
 
   // Helper function to create a text node
-  function createTextNode(text) {
-    return { type: 'TextNode', value: text.trim() };
+  function createTextNode(text, trim = true) {
+    return { type: 'TextNode', value: trim ? text.trim() : text };
   }
+
+  // split the content of a component into attributes and body content
+  function splitClassIdBody(content, attributes, classSelectors) {
+     const list = filterWhitespace(content.flat(Infinity));
+      let bodyContent = list.filter(it => it.type !== 'Attribute');
+      const attributeContent = list.filter(it => it.type === 'Attribute');
+      const combinedAttributes = [
+        ...(attributes || []),
+        ...(classSelectors || []),
+        ...(attributeContent || [])
+      ];
+
+      // combine class selectors
+      const classOnlySelectors = combinedAttributes.filter(it => it.type === 'Attribute' && it.id === 'class');
+      const totalAttributes = combinedAttributes.filter(it => it.type === 'Attribute' && it.id !== 'class');
+      if (classOnlySelectors.length > 0) {
+        // DO NOT JOIN CLASS SELECTORS
+        const combinedClassSelectors = classOnlySelectors.map(it => it.value);
+        totalAttributes.push({ type: 'Attribute', id: 'class', value: combinedClassSelectors });
+      }
+
+      bodyContent = bodyContent.map(it => {
+        if (typeof it === 'string') return createTextNode(it, false);
+        if (it.type === 'StringLiteral') return createTextNode(it.value, false);
+        return it;
+      });
+
+    return {
+      attributes: totalAttributes,
+      content: bodyContent
+    }
+  }
+
 }
 
 // The entry point of the grammar
 Start
-  = components:Component+ { return components; }
+  = components:(_ Component _)* { 
+    return filterWhitespace(components.flat(Infinity)); 
+  }
 
 // Defines a component
 Component
@@ -25,9 +60,33 @@ Component
 
 // Body of a component, can contain various types of content
 ComponentBody
-  = content:(_ Attribute _ / _ Event _ / _ Style _ / _ Function _ / _ Template _)* {
+  = content:(_ ComponentContent _)* {
       return filterWhitespace(content.flat(Infinity));
     }
+
+ComponentContent
+  =  State / Attribute / Event / Style / Function / Template
+
+State
+  = "@state" _ content:StateContent _ {
+      return content;
+    }
+
+StateContent
+  = StateGroup / StateSingle
+
+StateGroup
+  = _ "{" _ states:StateSingle* _ "}" _ {
+      return { type: "StateGroup", states };
+    }
+
+StateSingle
+  = _ id:identifier _ ":" _ value:StateSingleBody _ ";" {
+      return { type: "State", id, value };
+    }
+
+StateSingleBody 
+  = attributeValue / StateGroup
 
 // Defines an attribute of a component
 Attribute
@@ -37,12 +96,12 @@ Attribute
 
 // Possible values for an attribute
 attributeValue
-  = StringLiteral / NumberLiteral / BooleanLiteral / identifier
+  = StringLiteral / NumberLiteral / BooleanLiteral / Variable / ArrayLiteral / identifier
 
 // Defines an event handler
 Event
-  = "@event" _ eventName:identifier _ eventArgs:EventArgs? _ "{" _ eventBody:EventBody _ "}" {
-      return { type: "Event", eventName, args: eventArgs || [], body: eventBody };
+  = "@event" _ eventType:identifier _ eventArgs:EventArgs? _ selector:SelectorOptional? _ "{" _ eventBody:EventBody _ "}" {
+      return { type: "Event", eventType, args: eventArgs || [], body: eventBody, selector };
     }
 
 // Event arguments
@@ -50,11 +109,18 @@ EventArgs
   = "(" _ argList:identifierList _ ")" {
       return argList;
     }
+ 
 
 // List of identifiers, used for event arguments
 identifierList
   = first:identifier _ rest:("," _ identifier)* {
       return [first, ...rest.map(r => r[2])];
+    }
+
+// Optional selector for an event
+SelectorOptional
+  = "on" _ selector:selector {
+      return selector ? selector : null;
     }
 
 // Body of an event, can contain selectors and JavaScript sections
@@ -108,7 +174,7 @@ CSSPropertyWithVar
 
 // Variable within CSS or JavaScript
 Variable
-  = "var(" _ varName:identifier _ ")" {
+  = "var(" _ varName:varIdentifier _ ")" {
       return { type: "Variable", varName };
     }
 
@@ -120,8 +186,8 @@ Function
 
 // Arguments of a function
 FunctionArgs
-  = "(" _ argList:identifierList _ ")" {
-      return argList;
+  = "(" _ argList:identifierList? _ ")" {
+      return argList ? argList : [];
     }
 
 // Body of a function, can contain selectors and JavaScript sections
@@ -144,9 +210,13 @@ Template
 
 // Content of a template, including conditional rendering, repeat rendering, elements, and text
 TemplateContent
-  = elements:(_ ConditionalRendering _ / _ RepeatRendering _ / _ Element _ / _ Text _ )* { 
+  = elements:( _ TemplateContentWithText _ )* { 
     return filterWhitespace(elements.flat(Infinity)); 
 }
+
+TemplateContentWithText
+  = StringLiteral / Variable / Attribute / ConditionalRendering / RepeatRendering / Element / Text
+
 
 // Conditional rendering rules
 ConditionalRendering
@@ -173,10 +243,56 @@ RepeatRendering
     }
 
 // HTML element
+
 Element
-  = tag:TagName _ "{" _ content:(_ Element _ / _ Text _)* _ "}" {
-      return { type: "Element", tag, content: filterWhitespace(content.flat(Infinity)) };
+  = tag:TagName classSelectors:(ClassSelectors/IDSelectors)? attributes:ElementAttributeList? _ "{" _ content:TemplateContent _ "}" {
+
+      const s = splitClassIdBody(content, attributes, classSelectors);
+
+      return { type: "Element", tag, ...s };
     }
+  / tag:TagName classSelectors:(ClassSelectors/IDSelectors)? attributes:ElementAttributeList? _ content:InlineElementContent {
+
+      const s = splitClassIdBody(content, attributes, classSelectors);
+
+      return { type: "Element", tag, ...s };
+
+    }
+
+InlineElementContent
+  = content:(_ StringLiteral _ / _ Variable _ / Text)* {
+      return filterWhitespace(content.flat(Infinity)).map(it => {
+        if (typeof it === 'string') return createTextNode(it, false);
+        if (it.type === 'StringLiteral') return createTextNode(it.value, false);
+        return it;
+      });
+    }
+
+ClassSelectors
+  = selectors:("." classIdentifier:identifier)+ {
+      return selectors.map(selector => {
+        return { type: "Attribute", id: "class", value: selector[1] }
+      });
+    }
+IDSelectors
+  = selectors:("#" classIdentifier:identifier)+ {
+      return selectors.map(selector => {
+        return { type: "Attribute", id: "id", value: selector[1] };
+      });
+    }    
+
+ElementAttributeList
+  = "(" _ attr:ElementAttribute _ attrs:(',' _ ElementAttribute _)* _ ")" {
+      return [attr, ...attrs.map(attr => attr[2])];
+    }
+
+ElementAttribute
+  = id:("class" / "id" / attributeName) _ ":" _ value:(_ attributeValue _)* {
+      return { type: "Attribute", id, value: filterWhitespace(value.flat(Infinity)) };
+    }
+
+attributeName "attribute name"
+  = chars:[^:]+ { return chars.join('').trim(); }
 
 // Tag name of an HTML element
 TagName
@@ -188,7 +304,9 @@ Text
 
 // CSS rules
 CSSRules
-  = rules:CSSRule* { return rules; }
+  = rules:(_ CSSRule _)* { 
+      return filterWhitespace(rules.flat(Infinity)); 
+    }
 
 // Single CSS rule
 CSSRule
@@ -198,11 +316,13 @@ CSSRule
 
 // CSS properties
 CSSProperties
-  = properties:CSSProperty* { return properties; }
+  = properties:(_ CSSProperty _)* { 
+    return filterWhitespace(properties.flat(Infinity)); 
+  }
 
 // Single CSS property
 CSSProperty
-  = property:property _ ":" _ value:value _ ";" {
+  = property:property _ ":" _ value:(Variable / value) _ ";" {
       return { type: "CSSProperty", property, value };
     }
 
@@ -212,23 +332,57 @@ _ "whitespace"
 
 // Identifier (includes complex identifiers with dot notation)
 identifier "identifier"
-  = head:[a-zA-Z_] tail:[a-zA-Z0-9_.]* { return head + tail.join(''); }
+  = head:[a-zA-Z_\-] tail:[a-zA-Z0-9_\-]* { return head + tail.join(''); }
+
+// dot notation
+varIdentifier "var identifier"
+  = head:identifier tail:("." identifier)* { 
+    if (tail.length === 0) return head;
+    return [head, tail.map(t => t[1])].join('.'); 
+  }
+
+// Array literal
+ArrayLiteral "array literal"
+  = "[" _ elements:ArrayElements? _ "]" {
+      return { type: "ArrayLiteral", elements: elements || [] };
+    }
+
+ArrayElements
+  = first:attributeValue _ rest:(_ "," _ attributeValue _)* {
+    console.log(first, rest)
+      return [first, ...rest.map(r => r[3])];
+    }
+
 
 // String literal
 StringLiteral "string"
   = DoubleQuotedString / SingleQuotedString / BacktickQuotedString / TripleDoubleQuotedString
   
-DoubleQuotedString "double quoted string"  
-  = "\"" chars:[^\"]* "\"" { return chars.join(''); }
+DoubleQuotedString "double quoted string"
+  = "\"" chars:DoubleQuotedChar* "\"" {
+      return { type: "StringLiteral",  value: chars.join('')};
+    }
+
+DoubleQuotedChar
+  = "\\\\" { return "\\"; }  // 이스케이프된 백슬래시
+  / "\\\"" { return "\""; }  // 이스케이프된 따옴표
+  / [^\\"]                    // 백슬래시와 따옴표를 제외한 모든 문자
+
 
 SingleQuotedString "single quoted string"
-  = "'" chars:[^']* "'" { return chars.join(''); }
+  = "'" chars:[^']* "'" { 
+      return { type: "StringLiteral",  value: chars.join('')};
+  }
 
 BacktickQuotedString "backtick quoted string"
-  = '`' chars:[^`]* '`' { return chars.join(''); }
+  = '`' chars:[^`]* '`' { 
+      return { type: "StringLiteral",  value: chars.join('')};
+  }
 
 TripleDoubleQuotedString "triple double quoted string"
-  = '"""' chars:(TripleDoubleQuotedChar*) '"""' { return chars.join(''); }
+  = '"""' chars:(TripleDoubleQuotedChar*) '"""' { 
+      return { type: "StringLiteral",  value: chars.join('')};
+  }
 
 TripleDoubleQuotedChar
   = !'"""' char:. { return char; }
@@ -248,8 +402,8 @@ selector "CSS selector"
 
 // CSS property
 property "CSS property"
-  = chars:[^:]+ { return chars.join('').trim(); }
+  = chars:[^:;{}]+ { return chars.join('').trim(); }
 
 // CSS value
 value "CSS value"
-  = chars:[^;]+ { return chars.join('').trim(); }
+  = chars:[^;{}]+ { return chars.join('').trim(); }

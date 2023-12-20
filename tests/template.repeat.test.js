@@ -9,9 +9,9 @@ describe("SaLang Parser - Repeat Rendering with Conditional Rendering", () => {
         @template {
             @repeat item in var(items) {
                 @if var(item.isVisible) {
-                    div { Visible Item }
+                    div { "Visible Item" }
                 } @else {
-                    div { Hidden Item }
+                    div { "Hidden Item" }
                 }
             }
         }
@@ -42,7 +42,7 @@ describe("SaLang Parser - Repeat Rendering with Conditional Rendering", () => {
                                             ],
                                             content: [
                                                 {
-                                                    type: "Element", tag: "div", content: [
+                                                    type: "Element", tag: "div", attributes: [], content: [
                                                         { type: "TextNode", value: "Visible Item" }
                                                     ]
                                                 }
@@ -52,7 +52,7 @@ describe("SaLang Parser - Repeat Rendering with Conditional Rendering", () => {
                                             type: "ElseConditional",
                                             content: [
                                                 {
-                                                    type: "Element", tag: "div", content: [
+                                                    type: "Element", tag: "div", attributes: [], content: [
                                                         { type: "TextNode", value: "Hidden Item" }
                                                     ]
                                                 }

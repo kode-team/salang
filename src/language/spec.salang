@@ -1,0 +1,42 @@
+@component ComplexComponent {
+    @state {
+      items: [];
+      selectedItem: null;
+    }
+
+    @attribute defaultColor: "blue";
+
+    @style {
+      .item {
+        color: var(defaultColor);
+        padding: 10px;
+        border: 1px solid black;
+      }
+      .selected {
+        background-color: yellow;
+      }
+    }
+
+    @function selectItem(itemId) {
+      @js {
+        this.selectedItem = this.items.find(item => item.id === itemId);
+      }
+    }
+
+    @event click on .item {
+      @js {
+        selectItem(var(itemId));
+      }
+    }
+
+    @template {
+      ul {
+        @repeat item in var(items) {
+          li.item(id: "item-" var(item.id)) {
+            "Item: " var(item.name)
+            
+          }
+        }
+      }
+    }
+}

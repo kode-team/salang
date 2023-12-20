@@ -5,7 +5,9 @@ import salangParser from "../src/language/salang";
 describe("SaLang Parser - Component Parsing", () => {
   it("should parse a basic component with no attributes or content", () => {
     const input = `
-      @component emptyComponent {}
+      @component emptyComponent {
+
+      }
     `;
     const result = salangParser.parse(input.trim());
     expect(result).toEqual([
@@ -32,7 +34,10 @@ describe("SaLang Parser - Component Parsing", () => {
           {
             type: "Attribute",
             id: "title",
-            value: "Test Component"
+            value: {
+              type: "StringLiteral",
+              value: "Test Component"
+            }
           }
         ]
       }
@@ -44,11 +49,13 @@ describe("SaLang Parser - Component Parsing", () => {
       @component nestedComponent {
         @template {
           div {
-            Hello World
-            yellow
-            blue
-            red
-            span { This is a test }
+            "Hello World"
+            "yellow"
+            "blue"
+            "red"
+            span { 
+              "This is a test"
+            }
           }
         }
       }
@@ -65,6 +72,7 @@ describe("SaLang Parser - Component Parsing", () => {
               {
                 type: "Element",
                 tag: "div",
+                attributes: [],
                 content: [
                   { type: "TextNode", value: "Hello World" },
                   { type: "TextNode", value: "yellow" },
@@ -73,6 +81,7 @@ describe("SaLang Parser - Component Parsing", () => {
                   {
                     type: "Element",
                     tag: "span",
+                    attributes: [],
                     content: [{ type: "TextNode", value: "This is a test" }]
 
                   }

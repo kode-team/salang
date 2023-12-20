@@ -24,8 +24,9 @@ describe("SaLang Parser - Event Parsing with Optional Event Args", () => {
         body: [
           {
             type: "Event",
-            eventName: "click",
+            eventType: "click",
             args: ["event"],
+            selector: null,
             body: [
               {
                 type: "CSSRule",
@@ -68,8 +69,9 @@ describe("SaLang Parser - Event Parsing with Optional Event Args", () => {
         body: [
           {
             type: "Event",
-            eventName: "mouseover",
+            eventType: "mouseover",
             args: [],
+            selector: null,
             body: [
               {
                 type: "CSSRule",
