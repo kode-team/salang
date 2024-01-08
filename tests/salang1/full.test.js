@@ -1,60 +1,78 @@
 import { describe, it, expect } from 'vitest';
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe('MyComponent AST Tests', () => {
   const myComponentCode = `
   @component MyComponent {
     @state {
       counter: 0;
-      isVisible: true;
+      items: ["Item 1", "Item 2"];
     }
-
-    @attribute title: "Interactive Component";
-    @attribute primaryColor: var(themeColor);
   
+    @attribute title: "Default Title";
+    @attribute primaryColor: var(themeColor);
+
+
+
     @style {
       .main-component {
         color: var(primaryColor);
         padding: 20px;
       }
+
       .hidden {
         display: none;
       }
+
       .visible-section {
         display: block;
       }
+
       .toggle-btn {
         padding: 10px;
         background-color: var(buttonColor);
       }
     }
-    @function toggleVisibility() {
+
+
+    @function incrementCount() {
       @js {
-        this.isVisible = !this.isVisible;
+        counter++;
       }
+
     }
-    @event click on .toggle-btn {
+  
+    @onMounted {
       @js {
-        toggleVisibility();
+        console.log("Component mounted");
       }
+
+    }
+  
+    @jsx Header {
+      <header>
+        <h1>My Name: {title}</h1>
+      </header>
     }
 
+
+  
     @template {
       div.main-component {
-        @if var(isVisible) {
-          div.visible-section {
-            "This is the visible section"
+        "Main content here"
+        Header {}
+        button(onClick: incrementCount) { "Increment" }
+        p { "Count: {count}" }
+        @repeat item in items {
+          @js { 
+            console.log(item);
           }
-        } @else {
-          div.hidden {
-            "This is the hidden section"
-          }
-        }
-        button.toggle-btn {
-          "Toggle Visibility"
+          div { "{item}" }
         }
       }
     }
+  
+  
   }
   `;
 
@@ -73,9 +91,12 @@ describe('MyComponent AST Tests', () => {
             }
           },
           {
-            type: 'State', id: 'isVisible', value: {
-              type: "BooleanLiteral",
-              value: true,
+            type: 'State', id: 'items', value: {
+              type: "ArrayLiteral",
+              elements: [
+                { type: "StringLiteral", value: "Item 1" },
+                { type: "StringLiteral", value: "Item 2" }
+              ]
             }
           }
         ]
@@ -84,7 +105,7 @@ describe('MyComponent AST Tests', () => {
         type: "Attribute",
         id: "title",
         value: {
-          type: "StringLiteral", value: "Interactive Component"
+          type: "StringLiteral", value: "Default Title"
         }
       },
       {
@@ -155,30 +176,58 @@ describe('MyComponent AST Tests', () => {
       },
       {
         type: 'Function',
-        functionName: 'toggleVisibility',
+        functionName: 'incrementCount',
         args: [],
         body: [{
           type: 'JavaScript', code: [
             {
               "type": "JavaScriptCodeChunk",
-              "value": "this.isVisible = !this.isVisible;",
+              "value": "counter++;",
             },
           ]
         }]
       },
       {
-        type: 'Event',
-        eventType: 'click',
-        args: [],
-        body: [{
-          type: 'JavaScript', code: [
-            {
-              "type": "JavaScriptCodeChunk",
-              "value": "toggleVisibility();",
-            }
-          ]
-        }],
-        selector: '.toggle-btn'
+        type: "ComponentEvent",
+        eventType: "Mounted",
+        body: [
+          {
+            type: "JavaScript",
+            code: [
+              {
+                "type": "JavaScriptCodeChunk",
+                "value": "console.log(\"Component mounted\");",
+              },
+            ]
+          }
+        ]
+      },
+      {
+        type: "JsxTemplate",
+        name: "Header",
+        content: [
+          {
+            type: "jsxElement",
+            tagName: "header",
+            attributes: [],
+            children: [
+              {
+                type: "jsxElement",
+                tagName: "h1",
+                attributes: [],
+                children: [
+                  {
+                    type: "jsxText",
+                    text: "My Name: {title}",
+                  },
+                ]
+              }, {
+                type: "jsxText",
+                text: "\n      ",
+              }
+            ]
+          }
+        ]
       },
       {
         type: 'Template',
@@ -188,36 +237,43 @@ describe('MyComponent AST Tests', () => {
             tag: 'div',
             attributes: [{ type: 'Attribute', id: 'class', value: ['main-component'] }],
             content: [
-              {
-                type: 'Conditional',
-                ifContent: {
-                  type: 'IfConditional',
-                  condition: [{ type: 'Variable', varName: 'isVisible' }],
-                  content: [
-                    {
-                      type: 'Element',
-                      tag: 'div',
-                      attributes: [{ type: 'Attribute', id: 'class', value: ['visible-section'] }],
-                      content: [{ type: 'TextNode', value: 'This is the visible section' }]
-                    }
-                  ]
-                },
-                elseContent: {
-                  type: 'ElseConditional', content: [
-                    {
-                      type: 'Element',
-                      tag: 'div',
-                      attributes: [{ type: 'Attribute', id: 'class', value: ['hidden'] }],
-                      content: [{ type: 'TextNode', value: 'This is the hidden section' }]
-                    }
-                  ]
-                }
-              },
+              { type: 'TextNode', value: 'Main content here' },
+              { type: 'Element', 'tag': 'Header', attributes: [], content: [], },
               {
                 type: 'Element',
                 tag: 'button',
-                attributes: [{ type: 'Attribute', id: 'class', value: ['toggle-btn'] }],
-                content: [{ type: 'TextNode', value: 'Toggle Visibility' }]
+                attributes: [{ type: 'Attribute', id: 'onClick', value: ['incrementCount'] }],
+                content: [{ type: 'TextNode', value: 'Increment' }]
+              },
+              {
+                type: 'Element',
+                tag: 'p',
+                attributes: [],
+                content: [{ type: 'TextNode', value: 'Count: {count}' }]
+              },
+              {
+                type: 'Repeat',
+                variable: 'item',
+                collection: [{ type: 'JavaScriptCodeChunk', value: 'items' }],
+                content: [
+                  {
+                    type: 'JavaScript',
+                    code: [
+                      {
+                        "type": "JavaScriptCodeChunk",
+                        "value": "console.log(item);",
+                      },
+                    ]
+                  },
+                  {
+                    type: 'Element',
+                    tag: 'div',
+                    attributes: [],
+                    content: [
+                      { type: 'TextNode', value: '{item}' }
+                    ]
+                  }
+                ]
               }
             ]
           }

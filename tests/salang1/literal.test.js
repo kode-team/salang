@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe('Literal Parsing Tests', () => {
     it('should parse string literals correctly', () => {

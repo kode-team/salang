@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Function Parsing with var() in Selector", () => {
     it("should parse a function with var() in @selector", () => {

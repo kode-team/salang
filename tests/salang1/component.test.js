@@ -1,6 +1,6 @@
 // tests/salangParser.test.js
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Component Parsing", () => {
   it("should parse a basic component with no attributes or content", () => {

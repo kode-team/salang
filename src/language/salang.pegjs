@@ -43,7 +43,6 @@
       content: bodyContent
     }
   }
-
 }
 
 // The entry point of the grammar
@@ -65,7 +64,7 @@ ComponentBody
     }
 
 ComponentContent
-  =  State / Attribute / Event / Style / Function / Template
+  =  State / Attribute / ComponentEvent / Event / Style / Function / JsxTemplate / Template
 
 State
   = "@state" _ content:StateContent _ {
@@ -97,6 +96,12 @@ Attribute
 // Possible values for an attribute
 attributeValue
   = StringLiteral / NumberLiteral / BooleanLiteral / Variable / ArrayLiteral / identifier
+
+
+ComponentEvent
+  = "@on" eventType:identifier _ "{" _ eventBody:EventBody _ "}" {
+      return { type: "ComponentEvent", eventType, body: eventBody };
+    }
 
 // Defines an event handler
 Event
@@ -202,11 +207,83 @@ Style
       return { type: "Style", rules };
     }
 
+JsxTemplate
+  = "@jsx" _ name:identifier? _ "{" _ content:JsxElement* _ "}" {
+      return { type: "JsxTemplate", name, content: filterWhitespace(content.flat(Infinity)) };
+    }    
+JsxElement
+  = "<" _ tagName:JsxTagName _ attributes:JsxAttributeList? _ ">" _ children:JsxContent* _ "</" _ endTagName:JsxTagName _ ">" {
+      return {
+        type: "jsxElement",
+        tagName,
+        attributes: attributes || [],
+        children,
+      };
+    }
+
+JsxContent
+  = JsxElement / JsxExpression / JsxText
+
+JsxExpression
+  = "{" _ expression:JavaScriptCode _ "}" {
+      return { type: "jsxExpression", expression };
+    }
+
+JsxText
+  = text:[^<]+ {
+      return { type: "jsxText", text: text.join("") };
+    }
+
+JsxTagName
+  = [a-zA-Z][a-zA-Z0-9_.]* { return text(); }
+
+JsxAttributeList
+  = attributes:JsxAttribute* { return attributes; }
+
+JsxAttribute
+  = _ name:JsxAttributeName _ "=" _ value:JsxAttributeValue {
+      return { type: "jsxAttribute", name, value };
+    }
+
+JsxAttributeName
+  = [a-zA-Z\-]+ { return text(); }
+
+JsxAttributeValue
+  = value:(
+      JsxDoubleQuotedString
+      / JsxSingleQuotedString
+      / JsxIdentifier
+      / [^"'\s>]+ { return text(); }
+    ) {
+      return { type:"jsxAttributeValue", value};
+    }
+
+JsxIdentifier
+  = "{" _ variable:JsxVariable _ "}" {
+      return { type: "jsxIdentifier", variable };
+    }
+
+JsxVariable
+  = [a-zA-Z_][a-zA-Z0-9_.]* { return text(); }
+
+JsxDoubleQuotedString
+  = "\"" chars:([^"]*) "\"" {
+      return chars.join("");
+    }
+
+JsxSingleQuotedString
+  = "'" chars:([^']*) "'" {
+      return chars.join("");
+    }
+
 // Template of a component
 Template
-  = "@template" _ "{" _ content:TemplateContent _ "}" {
-      return { type: "Template", content: filterWhitespace(content.flat(Infinity)) };
+  = "@template" _ name:TemplateName? _ "{" _ content:TemplateContent _ "}" {
+      return { type: "Template", ...(name ? {name} : {}), content: filterWhitespace(content.flat(Infinity)) };
     }
+
+TemplateName
+  = identifier { return text(); }
 
 // Content of a template, including conditional rendering, repeat rendering, elements, and text
 TemplateContent
@@ -215,7 +292,7 @@ TemplateContent
 }
 
 TemplateContentWithText
-  = StringLiteral / Variable / Attribute / ConditionalRendering / RepeatRendering / Element / Text
+  = StringLiteral / Variable / Attribute / ConditionalRendering / RepeatRendering / JavaScriptSection / Element / Text
 
 
 // Conditional rendering rules

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe('SaLang @state Parsing Tests', () => {
   it('should correctly parse single @state declaration', () => {

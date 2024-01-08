@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "build": "pegjs src/language/salang.pegjs"
+    "build": "peggy --format es --source-map src/language/salang.map src/language/salang.pegjs",
+    "build2": "peggy --format es --source-map src/language/salang2.map src/language/salang2.pegjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "pegjs": "^0.10.0",
+    "peggy": "^3.0.2",
     "vitest": "^1.0.4"
   }
 }

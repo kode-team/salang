@@ -1,6 +1,6 @@
 // tests/salangParser.test.js
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Advanced Template Parsing", () => {
     it("should parse conditional rendering with @if and @else", () => {

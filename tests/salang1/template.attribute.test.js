@@ -1,6 +1,6 @@
 // tests/salangParser.test.js
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Template with Attributes Parsing", () => {
   it("should parse a template with attributes, conditional, and repeat rendering", () => {

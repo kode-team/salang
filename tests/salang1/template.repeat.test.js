@@ -1,6 +1,6 @@
 // tests/salangParser.test.js
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Repeat Rendering with Conditional Rendering", () => {
     it("should parse repeat rendering with nested if-else inside", () => {

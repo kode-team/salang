@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe('SaLang @event Parsing Tests', () => {
   it('should correctly parse @event with selector', () => {

@@ -1,6 +1,6 @@
 // tests/salangParser.test.js
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Event Parsing with Optional Event Args", () => {
   it("should parse an event with event args", () => {

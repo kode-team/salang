@@ -1,6 +1,6 @@
 // tests/salangParser.test.js
 import { describe, it, expect } from "vitest";
-import salangParser from "../src/language/salang";
+import * as salangParser from "../../src/language/salang";
 
 describe("SaLang Parser - Template Syntax Parsing", () => {
   it.only("should parse element with CSS selector style classes and attributes", () => {
@@ -17,7 +17,7 @@ describe("SaLang Parser - Template Syntax Parsing", () => {
         }
       }
     `;
-    const result = salangParser.parse(input.trim());
+    const result = salangParser.parse(input);
     expect(result).toEqual([
       {
         type: "Component",
